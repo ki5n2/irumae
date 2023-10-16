@@ -18,9 +18,15 @@
     "index.html": "f94d1974"
   },
   "posts/post-with-code/index.qmd": {
-    "index.html": "b2ea3625"
+    "index.html": "b2ea3625",
+    "index.ipynb": "e92474cf"
   },
   "posts/welcome/index.qmd": {
-    "index.html": "4c202160"
+    "index.html": "4c202160",
+    "index.ipynb": "03f737df"
+  },
+  "posts/post-with-code/Untitled-1.qmd": {
+    "Untitled-1.html": "059d11e3",
+    "Untitled-1.ipynb": "abb7c44a"
   }
 }
