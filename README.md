@@ -1,0 +1,2 @@
+# irumae
+ mining blog
