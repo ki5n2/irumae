@@ -4,7 +4,7 @@
     "href": "posts/DAGMM/index.html",
     "title": "DAGMM",
     "section": "",
-    "text": "This is a post"
+    "text": "list"
   },
   {
     "objectID": "posts/Autoencoder/index.html",
@@ -18,7 +18,7 @@
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "About this blog\nThis blog was created for my personal research, study.\n\nTip\n\npreview: To render and preview, execute the Quarto: Render command. You can alternatively use the Ctrl+Shift+K keyboard shortcut, or the Render button at the top right of the editor"
+    "text": "About this blog\nThis blog was created for my personal research, study.\n\nTip\n\npreview: To render and preview, execute the Quarto: Render command. You can alternatively use the Ctrl+Shift+K keyboard shortcut, or the Render button at the top right of the editor\nupload: To upload posts on a blog, enter “quarto publish gh-pages” in the terminal."
   },
   {
     "objectID": "index.html",
