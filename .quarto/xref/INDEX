@@ -40,5 +40,8 @@
   "posts/Autoencoder/index.qmd": {
     "index.html": "6c119d6f",
     "index.ipynb": "97ab54d2"
+  },
+  "posts/DAGMM/2023-10-15-arrhythmia.qmd": {
+    "2023-10-15-arrhythmia.html": "9af82dcd"
   }
 }
