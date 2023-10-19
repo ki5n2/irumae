@@ -1,7 +1,7 @@
 ---
 title: "DAGMM"
 author: "kione kim"
-date: "2023-10-16"
+date: "2023-10-15"
 ---
 
 This is a post
