@@ -12,3 +12,5 @@ This blog was created for my personal research, study.
 **Tip**
 
 * preview: To render and preview, execute the Quarto: Render command. You can alternatively use the Ctrl+Shift+K keyboard shortcut, or the Render button at the top right of the editor
+
+* upload: To upload posts on a blog, enter "quarto publish gh-pages" in the terminal.

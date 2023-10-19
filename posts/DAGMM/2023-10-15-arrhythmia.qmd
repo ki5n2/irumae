@@ -1,13 +1,14 @@
 ---
-title: "**[DAGMM]** DAGMM: for arrhythmia data set"
+title: "**[DAGMM]** DAGMM implementation of arrhythmia data set"
 author: "kione kim"
 date: "10/19/2023"
+categories: [dagmm]
 bibliography: dagmm.bib
 ---
 ## Deep Autoencoding Gaussian Mixture Model for Arrhythmia dataset
 
-```{python}
 ### imports
+```{python}
 import torch
 from torch import nn
 import numpy as np
@@ -16,8 +17,8 @@ import argparse
 import sys
 ```
 
+### data set
 ```{python}
-### data 파일
 file_path = 'C:\\Users\\UOS\\Desktop\\연구\\5. 데이터\\data\\arrhythmia\\arrhythmia.data'
 
 df = pd.read_csv(file_path, header=None)
@@ -29,6 +30,7 @@ data_array = torch.autograd.Variable(torch.from_numpy(data_array).float())
 data_array.shape
 ```
 
+### argparse
 ```{python}
 parser = argparse.ArgumentParser(description='parser for argparse test')
 
@@ -77,8 +79,8 @@ args.est_hidden_dim_list
 args
 ```
 
+### Compresssion network
 ```{python}
-### compresssion network
 class midlayer(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(midlayer, self).__init__()
@@ -145,8 +147,8 @@ class CompressionNet(nn.Module):
         return self._reconstruction_loss(target_hat, input_target)
 ```
 
-```{python}
 ### reconstructed error
+```{python}
 eps = torch.autograd.Variable(torch.FloatTensor([1.e-8]), requires_grad=False)
 
 def relative_euclidean_distance(x1, x2, eps=eps):
@@ -161,8 +163,8 @@ def cosine_similarity(x1, x2, eps=eps):
     return dot_prod / torch.max(dist_x1*dist_x2, eps)
 ```
 
+### Estimation network
 ```{python}
-### estimation network
 class Estimation(nn.Module):
     def __init__(self, est_hidden_dim_list):
         super().__init__()
@@ -181,8 +183,8 @@ class Estimation(nn.Module):
         return out
 ```
 
-```{python}
 ### Mixture
+```{python}
 class Mixture(nn.Module):
     def __init__(self, latent_dimension):
         super().__init__()
@@ -255,8 +257,10 @@ class Mixture(nn.Module):
 
         denom           = torch.sum(affiliations)
         self.Sigma.data = (num / denom).data + self.eps_Sigma
+```
 
-
+### Gaussian Mixture Model
+```{python}
 class GMM(nn.Module):
     def __init__(self, num_mixtures, latent_dimension):
         super().__init__()
@@ -285,8 +289,8 @@ class GMM(nn.Module):
             mixture._update_parameters(samples, affiliations)
 ```
 
-```{python}
 ### model
+```{python}
 class DAGMM(nn.Module):
     def __init__(self, compression_module, estimation_module, gmm_module):
         super().__init__()
@@ -324,8 +328,8 @@ class DAGMMArrhythmia(DAGMM):
                          gmm_module         = gmm)
 ```
 
-```{python}
 ### tests
+```{python}
 def test_dagmm():
     net = DAGMMArrhythmia(args.enc_hidden_dim_list, args.dec_hidden_dim_list, args.est_hidden_dim_list)
     out = net(data_array)
