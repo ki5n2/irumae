@@ -1,0 +1,10 @@
+---
+title: "pre"
+author: "kione kim"
+date: "2023-10-16"
+format: html
+categories: [news, code, analysis]
+---
+
+
+* preview: To render and preview, execute the Quarto: Render command. You can alternatively use the Ctrl+Shift+K keyboard shortcut, or the Render button at the top right of the editor:

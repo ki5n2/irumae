@@ -1,0 +1,20 @@
+---
+title: "About"
+about:
+  template: jolla
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/ki5n2/irumae
+
+---
+
+**About this blog**
+
+This blog was created for my personal research, study. 
+
+* preview: To render and preview, execute the Quarto: Render command. You can alternatively use the Ctrl+Shift+K keyboard shortcut, or the Render button at the top right of the editor:
+
+---
+
+irumae blog
