@@ -1,0 +1,403 @@
+---
+title: "**[DAGMM]** DAGMM: for arrhythmia data set"
+author: "kione kim"
+date: "10/19/2023"
+bibliography: dagmm.bib
+---
+## Deep Autoencoding Gaussian Mixture Model for Arrhythmia dataset
+
+```{python}
+### imports
+import torch
+from torch import nn
+import numpy as np
+import pandas as pd
+import argparse
+import sys
+```
+
+```{python}
+### data 파일
+file_path = 'C:\\Users\\UOS\\Desktop\\연구\\5. 데이터\\data\\arrhythmia\\arrhythmia.data'
+
+df = pd.read_csv(file_path, header=None)
+df = df.replace('?', 0)
+df = df.astype('float64')
+
+data_array = df.values
+data_array = torch.autograd.Variable(torch.from_numpy(data_array).float())
+data_array.shape
+```
+
+```{python}
+parser = argparse.ArgumentParser(description='parser for argparse test')
+
+parser.add_argument('--input_dim', type=int, default=data_array.shape[-1])
+parser.add_argument('--enc_hidden_dim', type=str, default='10,2')
+parser.add_argument('--dec_hidden_dim', type=str, default='10')
+parser.add_argument('--est_hidden_dim', type=str, default='4, 10, 2')
+parser.add_argument('--dropout', action='store_true', default=0.5)
+parser.add_argument('--learning_rate', type=float, default=0.001)
+parser.add_argument('--num_epoch', type=int, default=10)
+
+if 'ipykernel_launcher' in sys.argv[0]:
+    sys.argv = [sys.argv[0]]  
+
+args = parser.parse_args()
+
+enc_hidden_dim = args.enc_hidden_dim.split(',')
+dec_hidden_dim = args.dec_hidden_dim.split(',')
+est_hidden_dim = args.est_hidden_dim.split(',')
+
+args.enc_hidden_dim_list = []
+args.dec_hidden_dim_list = []
+args.est_hidden_dim_list = []
+
+args.enc_hidden_dim_list.append(args.input_dim)
+
+for i in enc_hidden_dim:
+    args.enc_hidden_dim_list.append(int(i))
+
+args.enc_hidden_dim_list
+
+args.dec_hidden_dim_list.append(args.enc_hidden_dim_list[-1])
+
+for i in dec_hidden_dim:
+    args.dec_hidden_dim_list.append(int(i))
+
+args.dec_hidden_dim_list.append(args.input_dim)
+
+args.dec_hidden_dim_list
+
+for i in est_hidden_dim:
+    args.est_hidden_dim_list.append(int(i))
+
+args.est_hidden_dim_list
+
+args
+```
+
+```{python}
+### compresssion network
+class midlayer(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super(midlayer, self).__init__()
+        self.fc_layer   = nn.Linear(input_dim, hidden_dim)
+        self.activation = nn.Tanh()
+    
+    def forward(self, input):
+        out = self.fc_layer(input)        
+        out = self.activation(out)
+        return out
+
+
+class Encoder(nn.Module):
+    def __init__(self, hidden_dim_list):
+        super(Encoder, self).__init__()
+        
+        layer_list = []
+        for i in range(len(hidden_dim_list)-2):
+            layer_list.append(midlayer(hidden_dim_list[i], hidden_dim_list[i+1]))
+        
+        layer_list.append(nn.Linear(hidden_dim_list[i+1], hidden_dim_list[i+2]))
+        self.layer = nn.Sequential(*layer_list)
+
+    def forward(self, input):
+        out = self.layer(input)
+        return out
+    
+class Decoder(nn.Module):
+    def __init__(self, hidden_dim_list):
+        super(Decoder, self).__init__()
+
+        layer_list = []
+        for i in range(len(hidden_dim_list)-2):
+            layer_list.append(midlayer(hidden_dim_list[i], hidden_dim_list[i+1]))
+        
+        layer_list.append(midlayer(hidden_dim_list[i+1], hidden_dim_list[i+2]))
+        self.layer = nn.Sequential(*layer_list)
+    
+    def forward(self, input):
+        out = self.layer(input)
+        return out
+
+class CompressionNet(nn.Module):
+    def __init__(self, enc_hidden_dim_list, dec_hidden_dim_list):
+        super().__init__()
+        self.encoder = Encoder(enc_hidden_dim_list)
+        self.decoder = Decoder(dec_hidden_dim_list)
+
+        self._reconstruction_loss = nn.MSELoss()
+
+    def forward(self, input):
+        out = self.encoder(input)
+        out = self.decoder(out)
+        return out
+
+    def encode(self, input):
+        return self.encoder(input)
+
+    def decode(self, input):
+        return self.decoder(input)
+
+    def reconstuction_loss(self, input, input_target):
+        target_hat = self(input)
+        return self._reconstruction_loss(target_hat, input_target)
+```
+
+```{python}
+### reconstructed error
+eps = torch.autograd.Variable(torch.FloatTensor([1.e-8]), requires_grad=False)
+
+def relative_euclidean_distance(x1, x2, eps=eps):
+    num = torch.norm(x1 - x2, p=2, dim=1)
+    denom = torch.norm(x1, p=2, dim=1)
+    return num / torch.max(denom, eps)
+
+def cosine_similarity(x1, x2, eps=eps):
+    dot_prod = torch.sum(x1 * x2, dim=1)
+    dist_x1 = torch.norm(x1, p=2, dim=1)
+    dist_x2 = torch.norm(x2, p=2, dim=1)
+    return dot_prod / torch.max(dist_x1*dist_x2, eps)
+```
+
+```{python}
+### estimation network
+class Estimation(nn.Module):
+    def __init__(self, est_hidden_dim_list):
+        super().__init__()
+        
+        layer_list = []
+        for i in range(len(est_hidden_dim_list)-2):
+            layer_list.append(midlayer(est_hidden_dim_list[i], est_hidden_dim_list[i+1]))
+        
+        layer_list.append(nn.Dropout(p=0.5))
+        layer_list.append(nn.Linear(est_hidden_dim_list[-2], est_hidden_dim_list[-1]))
+        layer_list.append(nn.Softmax())
+        self.net = nn.Sequential(*layer_list)
+        
+    def forward(self, input):
+        out = self.net(input)
+        return out
+```
+
+```{python}
+### Mixture
+class Mixture(nn.Module):
+    def __init__(self, latent_dimension):
+        super().__init__()
+        self.latent_dimension = latent_dimension
+
+        self.Phi    = np.random.random([1])
+        self.Phi    = torch.from_numpy(self.Phi).float()
+        self.Phi    = nn.Parameter(self.Phi, requires_grad = False)
+
+        self.mu     = 2.*np.random.random([latent_dimension]) - 0.5
+        self.mu     = torch.from_numpy(self.mu).float()
+        self.mu     = nn.Parameter(self.mu, requires_grad = False)
+
+        self.Sigma  = np.eye(latent_dimension, latent_dimension)
+        self.Sigma  = torch.from_numpy(self.Sigma).float()
+        self.Sigma  = nn.Parameter(self.Sigma, requires_grad = False)
+        
+        self.eps_Sigma  = torch.FloatTensor(np.diag([1.e-8 for _ in range(latent_dimension)]))
+
+    def forward(self, est_inputs, with_log = True):
+        batch_size, _   = est_inputs.shape
+        out_values  = []
+        inv_sigma   = torch.inverse(self.Sigma)
+        det_sigma   = np.linalg.det(self.Sigma.data.cpu().numpy())
+        det_sigma   = torch.from_numpy(det_sigma.reshape([1])).float()
+        det_sigma   = torch.autograd.Variable(det_sigma)
+        for est_input in est_inputs:
+            diff    = (est_input - self.mu).view(-1,1)
+            out     = -0.5 * torch.mm(torch.mm(diff.view(1,-1), inv_sigma), diff)
+            out     = (self.Phi * torch.exp(out)) / torch.sqrt(2. * np.pi * det_sigma)
+            if with_log:
+                out = -torch.log(out)
+            out_values.append(float(out.data.cpu().numpy()))
+
+        out = torch.autograd.Variable(torch.FloatTensor(out_values))
+        return out
+    
+    def _update_parameters(self, samples, affiliations):
+        if not self.training:
+            return
+
+        batch_size, _ = samples.shape
+
+        # Updating phi.
+        phi = torch.mean(affiliations)
+        self.Phi.data = phi.data
+
+        # Updating mu.
+        num = 0.
+        for i in range(batch_size):
+            z_i     = samples[i, :]
+            gamma_i = affiliations[i]
+            num     += gamma_i * z_i
+        
+        denom        = torch.sum(affiliations)
+        self.mu.data = (num / denom).data
+
+        # Updating Sigma.
+        mu  = self.mu
+        num = None
+        for i in range(batch_size):
+            z_i     = samples[i, :]
+            gamma_i = affiliations[i]
+            diff    = (z_i - mu).view(-1, 1)
+            to_add  = gamma_i * torch.mm(diff, diff.view(1, -1))
+            if num is None:
+                num = to_add
+            else:
+                num += to_add
+
+        denom           = torch.sum(affiliations)
+        self.Sigma.data = (num / denom).data + self.eps_Sigma
+
+
+class GMM(nn.Module):
+    def __init__(self, num_mixtures, latent_dimension):
+        super().__init__()
+        self.num_mixtures       = num_mixtures
+        self.latent_dimension   = latent_dimension
+
+        mixtures        = [Mixture(latent_dimension) for _ in range(num_mixtures)]
+        self.mixtures   = nn.ModuleList(mixtures)
+    
+    def forward(self, est_inputs):
+        out = None
+        for mixture in self.mixtures:
+            to_add  = mixture(est_inputs, with_log = False)
+            if out is None:
+                out = to_add
+            else:
+                out += to_add
+        return -torch.log(out)
+    
+    def _update_mixtures_parameters(self, samples, mixtures_affiliations):
+        if not self.training:
+            return
+
+        for i, mixture in enumerate(self.mixtures):
+            affiliations = mixtures_affiliations[:, i]
+            mixture._update_parameters(samples, affiliations)
+```
+
+```{python}
+### model
+class DAGMM(nn.Module):
+    def __init__(self, compression_module, estimation_module, gmm_module):
+        super().__init__()
+
+        self.compressor = compression_module
+        self.estimator  = estimation_module
+        self.gmm        = gmm_module
+
+    def forward(self, input):
+        encoded = self.compressor.encode(input)
+        decoded = self.compressor.decode(encoded)
+
+        relative_ed     = relative_euclidean_distance(input, decoded)
+        cosine_sim      = cosine_similarity(input, decoded)
+
+        relative_ed     = relative_ed.view(-1, 1)
+        cosine_sim      = relative_ed.view(-1, 1)
+        latent_vectors  = torch.cat([encoded, relative_ed, cosine_sim], dim=1)
+
+        if self.training:
+            mixtures_affiliations = self.estimator(latent_vectors)
+            self.gmm._update_mixtures_parameters(latent_vectors,
+                                                 mixtures_affiliations)
+        return self.gmm(latent_vectors)
+
+
+class DAGMMArrhythmia(DAGMM):
+    def __init__(self, enc_hidden_dim_list, dec_hidden_dim_list, est_hidden_dim_list):
+        compressor  = CompressionNet(enc_hidden_dim_list, dec_hidden_dim_list)
+        estimator   = Estimation(est_hidden_dim_list)
+        gmm = GMM(num_mixtures=2, latent_dimension=4)
+
+        super().__init__(compression_module = compressor,
+                         estimation_module  = estimator,
+                         gmm_module         = gmm)
+```
+
+```{python}
+### tests
+def test_dagmm():
+    net = DAGMMArrhythmia(args.enc_hidden_dim_list, args.dec_hidden_dim_list, args.est_hidden_dim_list)
+    out = net(data_array)
+    print(out)
+
+def convert_to_var(input):
+    out = torch.from_numpy(input).float()
+    out = torch.autograd.Variable(out)
+    return out
+
+def test_update_mixture():
+    batch_size       = 5
+    latent_dimension = 7
+    mix              = Mixture(latent_dimension)
+    latent_vectors   = np.random.random([batch_size, latent_dimension])
+    affiliations     = np.random.random([batch_size])
+    latent_vectors   = convert_to_var(latent_vectors)
+    affiliations     = convert_to_var(affiliations)
+
+    for param in mix.parameters():
+        print(param)
+
+    mix.train()
+    mix._update_parameters(latent_vectors, affiliations)
+
+    for param in mix.parameters():
+        print(param)
+
+
+def test_forward_mixture():
+    batch_size       = 5
+    latent_dimension = 7
+
+    mix = Mixture(latent_dimension)
+    latent_vectors   = np.random.random([batch_size, latent_dimension])
+    latent_vectors   = convert_to_var(latent_vectors)
+
+    mix.train()
+    out = mix(latent_vectors)
+    print(out)
+
+
+def test_update_gmm():
+    batch_size      = int(5)
+    latent_dimension= 7
+    num_mixtures    = 2
+
+    gmm = GMM(num_mixtures, latent_dimension)
+
+    latent_vectors  = np.random.random([batch_size, latent_dimension])
+    latent_vectors  = convert_to_var(latent_vectors)
+
+    affiliations    = np.random.random([batch_size, num_mixtures])
+    affiliations    = convert_to_var(affiliations)
+
+    for param in gmm.parameters():
+        print(param)
+
+    gmm.train()
+    gmm._update_mixtures_parameters(latent_vectors, affiliations)
+
+    for param in gmm.parameters():
+        print(param)
+```
+
+```{python}
+if __name__ == '__main__':
+    test_update_mixture()
+    test_forward_mixture()
+    test_update_gmm()
+    test_dagmm()
+```
+
+### Ref
+- https://openreview.net/forum?id=BJJLHbb0-

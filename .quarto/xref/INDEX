@@ -28,5 +28,17 @@
   "posts/post-with-code/Untitled-1.qmd": {
     "Untitled-1.html": "059d11e3",
     "Untitled-1.ipynb": "abb7c44a"
+  },
+  "posts/DAGMM/index.qmd": {
+    "index.html": "1c5c0598",
+    "index.ipynb": "b8f04aba"
+  },
+  "posts/DAGMM/2023-10-15.qmd": {
+    "2023-10-15.html": "cc9ab0e2",
+    "2023-10-15.ipynb": "7f87a50f"
+  },
+  "posts/Autoencoder/index.qmd": {
+    "index.html": "6c119d6f",
+    "index.ipynb": "97ab54d2"
   }
 }

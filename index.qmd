@@ -2,9 +2,7 @@
 title: "irumae"
 listing:
   contents: posts
-  sort: 
-    - "date desc"
-    - "title desc"
+  sort: [date desc, title]
   type: table
   categories: true
   sort-ui: [title, date]
