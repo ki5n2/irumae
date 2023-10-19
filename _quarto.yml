@@ -17,6 +17,5 @@ format:
   html:
     embed-resources: true
     self-contained-math: true
-    theme:
-      light: superhero
+    theme: cosmo
     css: styles.css
