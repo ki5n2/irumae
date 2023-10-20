@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ki5n2.github.io/irumae/posts/DAGMM/index.html</loc>
-    <lastmod>2023-10-20T04:47:09.280Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ki5n2.github.io/irumae/posts/Autoencoder/index.html</loc>
-    <lastmod>2023-10-20T04:45:40.737Z</lastmod>
+    <loc>https://ki5n2.github.io/irumae/posts/DAGMM/2023-10-15-arrhythmia.html</loc>
+    <lastmod>2023-10-20T04:58:30.308Z</lastmod>
   </url>
   <url>
     <loc>https://ki5n2.github.io/irumae/index.html</loc>
-    <lastmod>2023-10-20T04:44:10.746Z</lastmod>
+    <lastmod>2023-10-20T04:56:58.131Z</lastmod>
   </url>
   <url>
     <loc>https://ki5n2.github.io/irumae/about.html</loc>
-    <lastmod>2023-10-20T04:43:25.638Z</lastmod>
+    <lastmod>2023-10-20T04:56:14.705Z</lastmod>
   </url>
   <url>
     <loc>https://ki5n2.github.io/irumae/posts/Autoencoder/2023-10-11-autoencoder.html</loc>
-    <lastmod>2023-10-20T04:44:57.161Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ki5n2.github.io/irumae/posts/DAGMM/2023-10-15-arrhythmia.html</loc>
-    <lastmod>2023-10-20T04:46:26.613Z</lastmod>
+    <lastmod>2023-10-20T04:57:43.507Z</lastmod>
   </url>
 </urlset>
